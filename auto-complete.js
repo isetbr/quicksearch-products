@@ -153,7 +153,7 @@
         minChars: 3,
         delay: 150,
         cache: 1,
-        buttons: true,
+        buttons: false,
         menuClass: '',
         template: '<div class="autocomplete-suggestion" data-val="{name}" data-slug="{url}">' +
             '<div class="autocomplete-suggestion-img">' +

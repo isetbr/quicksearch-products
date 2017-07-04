@@ -12,7 +12,6 @@ Inclua o css auto-complete.css no `<head>` da sua pagina - e o JavaScript auto-c
 
 Propriedade | Padrão | Descrição
 ------------ | ------------- | -------------
-token | undefined | Ishopping API token
 minChars | 3 | Quantidade de caracteres para realizar a pesquisa
 delay | 150 | Valor em milisegundos correspondente a espera entre o apertar da tecla e a pesquisa na API
 cache | true | Determina se as pesquisas executadas devem ser armazenadas em cache.
@@ -64,7 +63,6 @@ Tags de substituição do botão:
 
 Notas:
 
-- O campo `token` é obrigatório
 - No caso da barra de pesquisa ser fixa/flutuante na página, utilizar na opção `menuClass` o valor `suggestions-fixed`
 
 ### Exemplo
@@ -75,7 +73,6 @@ Notas:
 
 ```
 $("#keywords").autoComplete({
-    token: "a9d8b9ff499ded8bd9309be98eda4822e3f08f817d69ed2b36",
-    menuClass: "suggestions-fixed",
+    menuClass: "suggestions-fixed"
 });
 ```

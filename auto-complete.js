@@ -136,7 +136,7 @@
                                     if (part in that.cache && !that.cache[part].length) { suggest([]); return; }
                                 }
                             }
-                            that.timer = setTimeout(function(){ o.source(val, suggest, o.token) }, o.delay);
+                            that.timer = setTimeout(function(){ o.source(val, suggest) }, o.delay);
                         }
                     } else {
                         that.last_val = val;
@@ -149,7 +149,6 @@
     }
 
     $.fn.autoComplete.defaults = {
-        token: undefined,
         minChars: 3,
         delay: 150,
         cache: 1,
@@ -189,15 +188,12 @@
             window.location.href = item.attr('data-slug');
             return false;
         },
-        source: function(term, response, token) {
+        source: function(term, response) {
             $.ajax({
                 type: "POST",
                 url: window.location.origin+'/ws/v1/product/search',
                 dataType: "json",
                 data: {query: term, img_w: 50, img_h: 50},
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader ("access-token", token);
-                },
                 success: function(data) {
                     response(data.products);
                 },

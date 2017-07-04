@@ -167,7 +167,7 @@
                 '{buttons}' +
             '</div>' +
         '</div>',
-        buttonTpl: '<div class="autocomplete-col-s6"><div class="autocomplete-buttons"><div class="cart_quantity_button btn-add" id="cart_quantity_button"><button class="pull-left" disabled="true" id="cart_quantity_down" rel="{id}" title="Remover"><i class="icon-white icon-minus"></i></button><div class="input"><input autocomplete="off" class="form-control input-sm" id="qty_updown_{id}" maxlength="4" name="qty_updown_{id}" onblur="if(this.value=="") { this.value="0"; }" onfocus="if(FormataMoeda(this.value,2)==0) { this.value=""; this.focus(); this.select(); }" onkeypress="return txtFormat(this, "9999", event);" pattern="[0-9]*" rel="{id}" size="4" type="text" value="0" /><span rel="{id}">Adicionar</span></div><button class="pull-right" id="cart_quantity_up" rel="{id}" title="Adicionar"><i class="icon-white icon-plus"></i></button></div></div></div>',
+        buttonTpl: '<div class="autocomplete-col-s6"><div class="autocomplete-buttons"><a id="bt_comprar" style="display:block;" href="javascript:void(0);" rel="{id}" onclick="buyNow(this.rel);" title="Comprar">Comprar</a></div></div>',
         renderItem: function (item, options) {
             var template = options.template.replace(/{name}/g, item.name);
             template = template.replace(/{url}/g, slugify(item.name) +"-p"+item.id);
@@ -176,7 +176,8 @@
 
             if (options.buttons) {
                 template = template.replace(/{col}/g, 's6');
-                template = template.replace(/{buttons}/g, options.buttonTpl);
+                var btn = options.buttonTpl.replace(/{id}/g, item.id);
+                template = template.replace(/{buttons}/g, btn);
             } else {
                 template = template.replace(/{col}/g, 's12');
                 template = template.replace(/{buttons}/g, '');

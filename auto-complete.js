@@ -23,7 +23,9 @@
         return this.each(function() {
             var that = $(this);
             // sc = 'suggestions container'
-            that.sc = $('<div class="autocomplete-suggestions '+o.menuClass+'"></div>');
+            that.sc = $('<div class="autocomplete-suggestions '+o.menuClass+'" style="display: none;"><div class="suggestions-content"></div><div class="suggestions-footer"><a href="#">Ver todos os resultados</a></div></div>');
+            
+
             that.data('sc', that.sc).data('autocomplete', that.attr('autocomplete'));
             that.attr('autocomplete', 'off');
             that.cache = {};
@@ -53,6 +55,9 @@
             $(window).on('resize.autocomplete', that.updateSC);
 
             that.sc.appendTo('body');
+
+            that.c = $('.suggestions-content');
+            that.sf = $('.suggestions-footer');
 
             that.sc.on('mouseleave', '.autocomplete-suggestion', function () {
                 $('.autocomplete-suggestion.selected').removeClass('selected');
@@ -90,11 +95,16 @@
                 if (data.length && val.length >= o.minChars) {
                     var s = '';
                     for (var i=0;i<data.length;i++) s += o.renderItem(data[i], {template: o.template, buttons: o.buttons, buttonTpl: o.buttonTpl});
-                    that.sc.html(s);
+                    if (data.length >= 10) {
+                        that.sf.find('a').attr('href', window.location.origin+'/q/'+encodeURI(val));
+                        that.sf.show(); 
+                    }
+                    that.c.html(s);
                     that.updateSC(0);
-                }
-                else
+                } else {
+                    that.sf.hide(); 
                     that.sc.hide();
+                }
             }
 
             that.on('keydown.autocomplete', function(e) {

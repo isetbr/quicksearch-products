@@ -6,11 +6,10 @@
     background: #fff; 
     box-shadow: -1px 1px 3px rgba(0,0,0,.1); 
     z-index: 999999;  
-    overflow: hidden; 
-    overflow-y: auto; 
+    overflow: hidden;
     box-sizing: border-box;
     position: absolute;
-    max-height: 340px;
+    max-height: 395px;
 }
 .suggestions-fixed {
     position: fixed !important;
@@ -57,4 +56,19 @@ div[class*='autocomplete-col-'] {
 .autocomplete-price {
     color: #f24b56;
     font-size: 20px;
+}
+.suggestions-content {
+    overflow-y: auto;
+    max-height: 354px;
+}
+.suggestions-footer {
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border-top: 1px solid #ccc;
+    display: none;
+}
+.suggestions-footer a {
+    display: block;
+    line-height: 40px;
 }

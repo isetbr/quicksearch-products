@@ -23,7 +23,7 @@ buttonTpl | `html` | html da estrutura do botão comprar a propriedade `buttons`
 template padrão:
 
 ```
-<div class="autocomplete-suggestion" data-val="{name}" data-slug="{url}">' +
+<div class="autocomplete-suggestion" data-val="{name}" data-slug="{url}">
     <div class="autocomplete-suggestion-img">
         <img src="{image}">
     </div>
@@ -73,6 +73,7 @@ Notas:
 
 ```
 $("#keywords").autoComplete({
-    menuClass: "suggestions-fixed"
+    menuClass: "suggestions-fixed",
+    buttons: true
 });
 ```

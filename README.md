@@ -19,6 +19,7 @@ menuClass | '' | Classe customizada adicionada ao menu dropdown
 buttons | false | Ativa/Desativa botão comprar da listagem de produtos
 template | `html` | html da estrutura de exibição dos itens dropdown
 buttonTpl | `html` | html da estrutura do botão comprar a propriedade `buttons` deve estar setada como true para exibição do botão
+footerText | `string` | Texto exibido no rodapé da listagem com link para página de busca da loja, texto padrão: "Ver mais"
 
 template padrão:
 

@@ -23,7 +23,7 @@
         return this.each(function() {
             var that = $(this);
             // sc = 'suggestions container'
-            that.sc = $('<div class="autocomplete-suggestions '+o.menuClass+'" style="display: none;"><div class="suggestions-content"></div><div class="suggestions-footer"><a href="#">Ver todos os resultados</a></div></div>');
+            that.sc = $('<div class="autocomplete-suggestions ' + o.menuClass + '" style="display: none;"><div class="suggestions-content"></div><div class="suggestions-footer"><a href="#">' + o.footerText + '</a></div></div>');
             
 
             that.data('sc', that.sc).data('autocomplete', that.attr('autocomplete'));
@@ -95,14 +95,12 @@
                 if (data.length && val.length >= o.minChars) {
                     var s = '';
                     for (var i=0;i<data.length;i++) s += o.renderItem(data[i], {template: o.template, buttons: o.buttons, buttonTpl: o.buttonTpl});
-                    if (data.length >= 10) {
-                        that.sf.find('a').attr('href', window.location.origin+'/q/'+encodeURI(val));
-                        that.sf.show(); 
-                    }
+
+                    that.sf.find('a').attr('href', window.location.origin+'/q/'+encodeURI(val));
+
                     that.c.html(s);
                     that.updateSC(0);
                 } else {
-                    that.sf.hide(); 
                     that.sc.hide();
                 }
             }
@@ -177,6 +175,7 @@
             '</div>' +
         '</div>',
         buttonTpl: '<div class="autocomplete-col-s6"><div class="autocomplete-buttons"><a id="bt_comprar" style="display:block;" href="javascript:void(0);" rel="{id}" onclick="buyNow(this.rel);" title="Comprar">Comprar</a></div></div>',
+        footerText: 'Ver mais',
         renderItem: function (item, options) {
             var template = options.template.replace(/{name}/g, item.name);
             template = template.replace(/{url}/g, slugify(item.name) +"-p"+item.id);

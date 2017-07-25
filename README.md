@@ -4,7 +4,7 @@ Compativel com jQuery 1.7.0+ in Firefox, Safari, Chrome, Opera, Internet Explore
 
 ### Usage
 
-Inclua o css auto-complete.css no `<head>` da sua pagina - e o JavaScript *auto-complete.min.js* e *auto-complete.css* depois de carregar o jQuery. autoComplete aceita configurações de um objeto de key/value, e pode ser aplicado em qualquer text input
+Inclua o css *auto-complete.css* no `<head>` da sua pagina - e o JavaScript *auto-complete.min.js* depois de carregar o jQuery. autoComplete aceita configurações de um objeto de key/value, e pode ser aplicado em qualquer text input
 
 ```$(selector).autoComplete(options);```
 

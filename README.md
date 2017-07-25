@@ -2,9 +2,9 @@
 
 Compativel com jQuery 1.7.0+ in Firefox, Safari, Chrome, Opera, Internet Explorer 7+. Nenhuma dependência exceto JQuery.
 
-### Uso
+### Usage
 
-Inclua o css auto-complete.css no `<head>` da sua pagina - e o JavaScript auto-complete.min.js depois de carregar o jQuery. autoComplete aceita configurações de um objeto de key/value, e pode ser aplicado em qualquer text input
+Inclua o css auto-complete.css no `<head>` da sua pagina - e o JavaScript *auto-complete.min.js* e *auto-complete.css* depois de carregar o jQuery. autoComplete aceita configurações de um objeto de key/value, e pode ser aplicado em qualquer text input
 
 ```$(selector).autoComplete(options);```
 
@@ -31,6 +31,7 @@ template padrão:
     <div class="autocomplete-suggestion-body">
         <div class="autocomplete-col-{col}">
             <div class="autocomplete-title">{name}</div>
+            <div class="autocomplete-desc">{desc}</div>
             <div class="autocomplete-price">{price}</div>
         </div>
         {buttons}
@@ -43,6 +44,7 @@ Tags de substituição do template:
 - `{name}` Nome do produto.
 - `{url}` Url do produto.
 - `{image}` Imagem do produto.
+- `{desc}` Breve descrição do produto.
 - `{price}` Preço do produto.
 - `{col}` Colunas do template, se a opção `buttons` estiver ativa o template é dividido em duas colunas, uma para o conteúdo do produto e outra para o template do botão.
 - `{buttons}` Esta tag é substituida pelo template do botão comprar.

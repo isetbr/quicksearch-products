@@ -52,7 +52,10 @@ div[class*='autocomplete-col-'] {
 .autocomplete-buttons {
     float: right;
 }
-
+.autocomplete-desc {
+    color: #333;
+    font-size: 10px;
+}
 .autocomplete-price {
     color: #f24b56;
     font-size: 20px;
@@ -71,3 +74,4 @@ div[class*='autocomplete-col-'] {
     display: block;
     line-height: 40px;
 }
+.suggestions-content .highlight { background-color: #f0f4c3; }

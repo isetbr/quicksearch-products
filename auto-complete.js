@@ -259,10 +259,22 @@
 
     function slugify(text) {
       return text.toString().toLowerCase()
-        .replace(/\s+/g, '-')           // Replace spaces with -
-        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-        .replace(/^-+/, '')             // Trim - from start of text
-        .replace(/-+$/, '');            // Trim - from end of text
+          .replace(/[ајбЅв¬гдƒ≈е™]+/g, 'a')      // Special Characters #1
+          .replace(/[и»й…к лЋ]+/g, 'e')       	// Special Characters #2
+          .replace(/[мћнЌоќпѕ]+/g, 'i')       	// Special Characters #3
+          .replace(/[т“у”ф‘х’ц÷Ї]+/g, 'o')      	// Special Characters #4
+          .replace(/[щўъЏыџь№]+/g, 'u')       	// Special Characters #5
+          .replace(/[эЁ€?]+/g, 'y')       		// Special Characters #6
+          .replace(/[с—]+/g, 'n')       			// Special Characters #7
+          .replace(/[з«]+/g, 'c')       		// Special Characters #8
+          .replace(/[я]+/g, 'ss')       		// Special Characters #9
+          .replace(/[∆ж]+/g, 'ae')       	    // Special Characters #10
+          .replace(/[Ўш?]+/g, 'oe')       		// Special Characters #11
+          .replace(/[%]+/g, 'pct')       		// Special Characters #12
+          .replace(/\s+/g, '-')           		// Replace spaces with -
+          .replace(/[^\w\-]+/g, '')       		// Remove all non-word chars
+          .replace(/\-\-+/g, '-')         		// Replace multiple - with single -
+          .replace(/^-+/, '')             		// Trim - from start of text
+          .replace(/-+$/, '');            		// Trim - from end of text
     }
 }(jQuery));

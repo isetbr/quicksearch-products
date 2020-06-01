@@ -15,6 +15,7 @@ Propriedade | Padrão | Descrição
 minChars | 3 | Quantidade de caracteres para realizar a pesquisa
 delay | 150 | Valor em milisegundos correspondente a espera entre o apertar da tecla e a pesquisa na API
 cache | true | Determina se as pesquisas executadas devem ser armazenadas em cache.
+limit | 10 | Número máximo de itens a serem retornados conforme pesquisa.
 menuClass | '' | Classe customizada adicionada ao menu dropdown
 buttons | false | Ativa/Desativa botão comprar da listagem de produtos
 template | `html` | html da estrutura de exibição dos itens dropdown

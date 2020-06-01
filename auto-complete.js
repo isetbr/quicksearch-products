@@ -202,6 +202,7 @@
         minChars: 3,
         delay: 150,
         cache: 1,
+        limit: 10,
         buttons: false,
         menuClass: '',
         template: '<div class="autocomplete-suggestion" data-val="{name}" data-slug="{url}">' +
@@ -245,7 +246,7 @@
                 type: "POST",
                 url: window.location.origin+'/ws/v1/product/search',
                 dataType: "json",
-                data: {query: term},
+                data: {query: slugify(term),limit:this.limit},
                 success: function(data) {
                     response(data.products);
                 },

@@ -135,7 +135,7 @@
                 if (data.length && val.length >= o.minChars) {
                     var s = '';
                     for (var i=0;i<data.length;i++) s += o.renderItem(data[i], {template: o.template, buttons: o.buttons, buttonTpl: o.buttonTpl});
-                    that.sf.find('a').attr('href', window.location.origin+'/q/'+encodeURIComponent(val).replace(/%20/g, "+"));
+                    that.sf.find('a').attr('href', window.location.origin+'/q/'+encodeURIComponent(slugify(val.toLowerCase())).replace(/%20/g, "+"));
                     that.c.html(s);
                     that.updateSC(0);
                     $("div.autocomplete-suggestion-img img").error(function() {

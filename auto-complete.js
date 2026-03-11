@@ -1,281 +1,659 @@
-(function($){
+/**
+ * QuickSearch Products v2.0.0
+ * Vanilla JS autocomplete widget for e-commerce product search
+ * https://github.com/isetbr/quicksearch-products
+ */
+(function () {
+  'use strict';
 
-    jQuery.fn.highlight = function(pat) {
-        var map={"�":"a","�":"A","�":"a","�":"A","�":"a","�":"A","�":"a","�":"A","�":"e","�":"E","�":"e","�":"E","�":"e","�":"E","�":"i","�":"I","�":"i","�":"I","�":"i","�":"I","�":"o","�":"O","�":"o","�":"O","�":"o","�":"O","�":"o","�":"O","�":"u","�":"U","�":"u","�":"U","�":"u","�":"U","�":"u","�":"U","�":"c","�":"C"};
-        function innerHighlight(node, pat) {
-            var skip = 0;
-            if (node.nodeType == 3) {
-                var pos = node.data.replace(/[\W\[\] ]/g,function(a){return map[a]||a}).toUpperCase().indexOf(pat);
-                pos -= (node.data.substr(0, pos).toUpperCase().length - node.data.substr(0, pos).length);
-                if (pos >= 0) {
-                    var spannode = document.createElement('span');
-                    spannode.className = 'highlight';
-                    var middlebit = node.splitText(pos);
-                    var endbit = middlebit.splitText(pat.length);
-                    var middleclone = middlebit.cloneNode(true);
-                    spannode.appendChild(middleclone);
-                    middlebit.parentNode.replaceChild(spannode, middlebit);
-                    skip = 1;
-                }
-            }
-            else if (node.nodeType == 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
-                for (var i = 0; i < node.childNodes.length; ++i) {
-                    i += innerHighlight(node.childNodes[i], pat);
-                }
-            }
-            return skip;
+  const DEFAULTS = {
+    minChars: 3,
+    delay: 300,
+    cache: true,
+    maxCacheSize: 50,
+    limit: 10,
+    buttons: false,
+    menuClass: '',
+    fixedPosition: false,
+    footerText: 'Ver mais resultados',
+    noResultsText: 'Nenhum produto encontrado para',
+    loadingText: 'Buscando...',
+    apiUrl: '/ws/v1/product/search',
+    fallbackImage:
+      'data:image/png;base64,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',
+    onSelect: (product) => {
+      window.location.href = product.url;
+    },
+    onBuy: (productId) => {
+      if (typeof window.buyNow === 'function') window.buyNow(productId);
+    },
+    renderItem: null,
+  };
+
+  let instanceCount = 0;
+
+  class QuickSearch {
+    constructor(selector, options = {}) {
+      this.input =
+        typeof selector === 'string'
+          ? document.querySelector(selector)
+          : selector;
+
+      if (!this.input) {
+        throw new Error(`QuickSearch: element "${selector}" not found`);
+      }
+
+      this.options = Object.assign({}, DEFAULTS, options);
+      this.id = `qs-${++instanceCount}`;
+      this.cache = new Map();
+      this.selectedIndex = -1;
+      this.lastValue = '';
+      this.debounceTimer = null;
+      this.abortController = null;
+      this.isOpen = false;
+      this.items = [];
+
+      this._buildDropdown();
+      this._setupAria();
+      this._bindEvents();
+    }
+
+    // ── DOM Construction ─────────────────────────────────────
+
+    _buildDropdown() {
+      const o = this.options;
+
+      this.dropdown = document.createElement('div');
+      this.dropdown.className = `qs-dropdown${o.menuClass ? ' ' + o.menuClass : ''}`;
+      this.dropdown.id = this.id;
+      this.dropdown.setAttribute('role', 'listbox');
+      this.dropdown.style.display = 'none';
+
+      // Loading
+      this.loadingEl = document.createElement('div');
+      this.loadingEl.className = 'qs-loading';
+      this.loadingEl.setAttribute('role', 'status');
+      this.loadingEl.setAttribute('aria-live', 'polite');
+      this.loadingEl.innerHTML = `<span class="qs-spinner"></span> ${o.loadingText}`;
+      this.loadingEl.style.display = 'none';
+
+      // Results
+      this.resultsEl = document.createElement('div');
+      this.resultsEl.className = 'qs-results';
+
+      // Empty state
+      this.emptyEl = document.createElement('div');
+      this.emptyEl.className = 'qs-empty';
+      this.emptyEl.setAttribute('role', 'status');
+      this.emptyEl.setAttribute('aria-live', 'polite');
+      this.emptyEl.style.display = 'none';
+
+      // Footer
+      this.footerEl = document.createElement('div');
+      this.footerEl.className = 'qs-footer';
+      this.footerEl.innerHTML = `<a href="#">${o.footerText}</a>`;
+      this.footerEl.style.display = 'none';
+
+      this.dropdown.appendChild(this.loadingEl);
+      this.dropdown.appendChild(this.resultsEl);
+      this.dropdown.appendChild(this.emptyEl);
+      this.dropdown.appendChild(this.footerEl);
+
+      if (o.fixedPosition) {
+        this.dropdown.classList.add('qs-fixed');
+      }
+
+      document.body.appendChild(this.dropdown);
+    }
+
+    _setupAria() {
+      this.input.setAttribute('role', 'combobox');
+      this.input.setAttribute('aria-autocomplete', 'list');
+      this.input.setAttribute('aria-expanded', 'false');
+      this.input.setAttribute('aria-controls', this.id);
+      this.input.setAttribute('aria-activedescendant', '');
+      this.originalAutocomplete = this.input.getAttribute('autocomplete');
+      this.input.setAttribute('autocomplete', 'off');
+    }
+
+    // ── Events ───────────────────────────────────────────────
+
+    _bindEvents() {
+      this._onInput = this._handleInput.bind(this);
+      this._onKeydown = this._handleKeydown.bind(this);
+      this._onBlur = this._handleBlur.bind(this);
+      this._onFocus = this._handleFocus.bind(this);
+      this._onResize = this._positionDropdown.bind(this);
+
+      this.input.addEventListener('input', this._onInput);
+      this.input.addEventListener('keydown', this._onKeydown);
+      this.input.addEventListener('blur', this._onBlur);
+      this.input.addEventListener('focus', this._onFocus);
+      window.addEventListener('resize', this._onResize);
+
+      // Delegate click on results
+      this._onDropdownClick = this._handleDropdownClick.bind(this);
+      this._onDropdownMouseover = this._handleDropdownMouseover.bind(this);
+      this._onDropdownMouseleave = this._handleDropdownMouseleave.bind(this);
+      this._onDropdownMousedown = (e) => e.preventDefault(); // prevent blur
+
+      this.dropdown.addEventListener('click', this._onDropdownClick);
+      this.dropdown.addEventListener('mouseover', this._onDropdownMouseover);
+      this.dropdown.addEventListener('mouseleave', this._onDropdownMouseleave);
+      this.dropdown.addEventListener('mousedown', this._onDropdownMousedown);
+    }
+
+    _handleInput() {
+      const val = this.input.value;
+
+      if (val.length < this.options.minChars) {
+        this.lastValue = val;
+        this._close();
+        return;
+      }
+
+      if (val === this.lastValue) return;
+      this.lastValue = val;
+
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = setTimeout(() => this._search(val), this.options.delay);
+    }
+
+    _handleFocus() {
+      const val = this.input.value;
+      if (val.length >= this.options.minChars && this.items.length > 0) {
+        this._open();
+      }
+    }
+
+    _handleBlur() {
+      // Small delay to allow click events on dropdown items
+      setTimeout(() => {
+        if (!this.dropdown.matches(':hover')) {
+          this._close();
         }
-        return this.length && pat && pat.length ? this.each(function() {
-            innerHighlight(this, pat.replace(/[\W\[\] ]/g,function(a){return map[a]||a}).toUpperCase());
-        }) : this;
-    };
+      }, 150);
+    }
 
-    jQuery.fn.removeHighlight = function() {
-        return this.find("span.highlight").each(function() {
-            this.parentNode.firstChild.nodeName;
-            with (this.parentNode) {
-                replaceChild(this.firstChild, this);
-                normalize();
-            }
-        }).end();
-    };
-    $.fn.autoComplete = function(options) {
-        var o = $.extend({}, $.fn.autoComplete.defaults, options);
+    _handleKeydown(e) {
+      if (!this.isOpen) return;
 
-        // public methods
-        if (typeof options == 'string') {
-            this.each(function() {
-                var that = $(this);
-                if (options == 'destroy') {
-                    $(window).off('resize.autocomplete', that.updateSC);
-                    that.off('blur.autocomplete focus.autocomplete keydown.autocomplete keyup.autocomplete');
-                    if (that.data('autocomplete'))
-                        that.attr('autocomplete', that.data('autocomplete'));
-                    else
-                        that.removeAttr('autocomplete');
-                    $(that.data('sc')).remove();
-                    that.removeData('sc').removeData('autocomplete');
-                }
-            });
-            return this;
+      const itemEls = this.resultsEl.querySelectorAll('.qs-item');
+      const count = itemEls.length;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          this.selectedIndex = this.selectedIndex < count - 1 ? this.selectedIndex + 1 : 0;
+          this._updateSelection(itemEls);
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          this.selectedIndex = this.selectedIndex > 0 ? this.selectedIndex - 1 : count - 1;
+          this._updateSelection(itemEls);
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          if (this.selectedIndex >= 0 && itemEls[this.selectedIndex]) {
+            this._selectItem(itemEls[this.selectedIndex]);
+          }
+          break;
+
+        case 'Escape':
+          this._close();
+          break;
+
+        case 'Tab':
+          this._close();
+          break;
+      }
+    }
+
+    _handleDropdownClick(e) {
+      const buyBtn = e.target.closest('.qs-buy-btn');
+      if (buyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const item = buyBtn.closest('.qs-item');
+        if (item) {
+          this.options.onBuy(item.dataset.id);
         }
+        return;
+      }
 
-        return this.each(function() {
-            var that = $(this);
-            // sc = 'suggestions container'
-            that.sc = $('<div class="autocomplete-suggestions ' + o.menuClass + '" style="display: none;"><div class="suggestions-content"></div><div class="suggestions-footer"><a href="#">' + o.footerText + '</a></div></div>');
-            
+      const footerLink = e.target.closest('.qs-footer a');
+      if (footerLink) {
+        // Let default link behavior happen
+        return;
+      }
 
-            that.data('sc', that.sc).data('autocomplete', that.attr('autocomplete'));
-            that.attr('autocomplete', 'off');
-            that.cache = {};
-            that.last_val = '';
+      const item = e.target.closest('.qs-item');
+      if (item) {
+        this._selectItem(item);
+      }
+    }
 
-            that.updateSC = function(resize, next) { 
-                that.sc.css({
-                    top: that.parent().offset().top + that.parent().outerHeight(),
-                    left: that.parent().offset().left,
-                    width: that.parent().outerWidth()
-                });
-                if (!resize) {
-                    that.sc.show();
-                    if (!that.sc.maxHeight) that.sc.maxHeight = parseInt(that.sc.css('max-height'));
-                    if (!that.sc.suggestionHeight) that.sc.suggestionHeight = $('.autocomplete-suggestion', that.sc).first().outerHeight();
-                    if (that.sc.suggestionHeight)
-                        if (!next) that.sc.scrollTop(0);
-                        else {
-                            var scrTop = that.sc.scrollTop(), selTop = next.offset().top - that.sc.offset().top;
-                            if (selTop + that.sc.suggestionHeight - that.sc.maxHeight > 0)
-                                that.sc.scrollTop(selTop + that.sc.suggestionHeight + scrTop - that.sc.maxHeight);
-                            else if (selTop < 0)
-                                that.sc.scrollTop(selTop + scrTop);
-                        }
-                }
-            }
-            $(window).on('resize.autocomplete', that.updateSC);
+    _handleDropdownMouseover(e) {
+      const item = e.target.closest('.qs-item');
+      if (!item) return;
 
-            that.sc.appendTo('body');
+      const itemEls = this.resultsEl.querySelectorAll('.qs-item');
+      itemEls.forEach((el, i) => {
+        if (el === item) {
+          this.selectedIndex = i;
+          el.classList.add('qs-item--selected');
+          el.setAttribute('aria-selected', 'true');
+        } else {
+          el.classList.remove('qs-item--selected');
+          el.setAttribute('aria-selected', 'false');
+        }
+      });
+      this.input.setAttribute('aria-activedescendant', item.id);
+    }
 
-            that.c = $('.suggestions-content');
-            that.sf = $('.suggestions-footer');
+    _handleDropdownMouseleave() {
+      this._clearSelection();
+    }
 
-            that.sc.on('mouseleave', '.autocomplete-suggestion', function () {
-                $('.autocomplete-suggestion.selected').removeClass('selected');
-            });
+    // ── Search ───────────────────────────────────────────────
 
-            that.sc.on('mouseenter', '.autocomplete-suggestion', function () {
-                $('.autocomplete-suggestion.selected').removeClass('selected');
-                $(this).addClass('selected');
-            });
+    _search(query) {
+      const o = this.options;
 
-            that.sc.on('click', '.autocomplete-suggestion', function (e) {
-                var item = $(this), v = item.data('val');
-                if (v || item.hasClass('autocomplete-suggestion')) { // else outside click
-                    that.val(v);
-                    o.onSelect(e, v, item);
-                    //that.sc.hide();
-                }
-                return false;
-            });
+      // Check cache
+      if (o.cache && this.cache.has(query)) {
+        this._render(query, this.cache.get(query));
+        return;
+      }
 
-            that.on('blur.autocomplete', function() {
-                try { over_sb = $('.autocomplete-suggestions:hover').length; } catch(e){ over_sb = 0; } // IE7 fix :hover
-                if (!over_sb) {
-                    that.last_val = that.val();
-                    that.sc.hide();
-                    setTimeout(function(){ that.sc.hide(); }, 350); // hide suggestions on fast input
-                } else if (!that.is(':focus')) setTimeout(function(){ that.focus(); }, 20);
-            });
+      // Sub-query empty optimization: if "cam" returned 0, skip "came"
+      if (o.cache) {
+        for (let i = query.length - 1; i >= o.minChars; i--) {
+          const sub = query.slice(0, i);
+          if (this.cache.has(sub) && this.cache.get(sub).length === 0) {
+            this._render(query, []);
+            return;
+          }
+        }
+      }
 
-            if (!o.minChars) that.on('focus.autocomplete', function(){ that.last_val = '\n'; that.trigger('keyup.autocomplete'); });
+      // Abort previous request
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+      this.abortController = new AbortController();
 
-            function suggest(data) {
-                var val = that.val();
-                that.cache[val] = data;
-                if (data.length && val.length >= o.minChars) {
-                    var s = '';
-                    for (var i=0;i<data.length;i++) s += o.renderItem(data[i], {template: o.template, buttons: o.buttons, buttonTpl: o.buttonTpl});
-                    that.sf.find('a').attr('href', window.location.origin+'/q/'+encodeURIComponent(slugify(val.toLowerCase())).replace(/%20/g, "+"));
-                    that.c.html(s);
-                    that.updateSC(0);
-                    $("div.autocomplete-suggestion-img img").error(function() {
-                        $(this).attr("src","data:image/png;base64,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").stop(true, true).hide().fadeIn();
-                    });
-                    $("div.suggestions-content").highlight(val);
-                } else {
-                    that.sc.hide();
-                }
-            }
+      this._showLoading();
 
-            that.on('keydown.autocomplete', function(e) {
-                // down (40), up (38)
-                if ((e.which == 40 || e.which == 38) && that.sc.html()) {
-                    var next, sel = $('.autocomplete-suggestion.selected', that.sc);
-                    if (!sel.length) {
-                        next = (e.which == 40) ? $('.autocomplete-suggestion', that.sc).first() : $('.autocomplete-suggestion', that.sc).last();
-                        that.val(next.addClass('selected').data('val'));
-                    } else {
-                        next = (e.which == 40) ? sel.next('.autocomplete-suggestion') : sel.prev('.autocomplete-suggestion');
-                        if (next.length) { sel.removeClass('selected'); that.val(next.addClass('selected').data('val')); }
-                        else { sel.removeClass('selected'); that.val(that.last_val); next = 0; }
-                    }
-                    that.updateSC(0, next);
-                    return false;
-                }
-                // esc
-                else if (e.which == 27) that.val(that.last_val).sc.hide();
-                // enter or tab
-                else if (e.which == 13 || e.which == 9) {
-                    var sel = $('.autocomplete-suggestion.selected', that.sc);
-                    if (sel.length && that.sc.is(':visible')) { o.onSelect(e, sel.data('val'), sel); setTimeout(function(){ that.sc.hide(); }, 20); }
-                }
-            });
+      const body = new URLSearchParams();
+      body.append('query', slugify(query));
+      body.append('limit', o.limit);
 
-            that.on('keyup.autocomplete', function(e) {
-                if (!~$.inArray(e.which, [13, 27, 35, 36, 37, 38, 39, 40])) {
-                    var val = that.val();
-                    if (val.length >= o.minChars) {
-                        if (val != that.last_val) {
-                            that.last_val = val;
-                            clearTimeout(that.timer);
-                            if (o.cache) {
-                                if (val in that.cache) { suggest(that.cache[val]); return; }
-                                // no requests if previous suggestions were empty
-                                for (var i=1; i<val.length-o.minChars; i++) {
-                                    var part = val.slice(0, val.length-i);
-                                    if (part in that.cache && !that.cache[part].length) { suggest([]); return; }
-                                }
-                            }
-                            that.timer = setTimeout(function(){ o.source(val, suggest) }, o.delay);
-                        }
-                    } else {
-                        that.last_val = val;
-                        that.sc.hide();
-                    }
-                }
-            });
+      fetch(o.apiUrl, {
+        method: 'POST',
+        body: body,
+        signal: this.abortController.signal,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          const products = data.products || [];
+          this._cacheSet(query, products);
+          this._render(query, products);
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error('QuickSearch:', err);
+            this._close();
+          }
         });
-
     }
 
-    $.fn.autoComplete.defaults = {
-        minChars: 3,
-        delay: 150,
-        cache: 1,
-        limit: 10,
-        buttons: false,
-        menuClass: '',
-        template: '<div class="autocomplete-suggestion" data-val="{name}" data-slug="{url}">' +
-            '<div class="autocomplete-suggestion-img">' +
-                '<img src="{image}" width="50" height="50">' +
-            '</div>' +
-            '<div class="autocomplete-suggestion-body">' +
-                '<div class="autocomplete-col-{col}">' +
-                    '<div class="autocomplete-title">{name}</div>' +
-                    '<div class="autocomplete-desc">{desc}</div>' +
-                    '<div class="autocomplete-price">{price}</div>' +
-                '</div>' +
-                '{buttons}' +
-            '</div>' +
-        '</div>',
-        buttonTpl: '<div class="autocomplete-col-s6"><div class="autocomplete-buttons"><a id="bt_comprar" style="display:block;" href="javascript:void(0);" rel="{id}" onclick="buyNow(this.rel);" title="Comprar">Comprar</a></div></div>',
-        footerText: 'Ver mais resultados',
-        renderItem: function (item, options) {
-            var template = options.template.replace(/{name}/g, item.name);
-            template = template.replace(/{url}/g, "/"+slugify(item.name) +"-p"+item.id);
-            template = template.replace(/{desc}/g, item.desc_small);
-            template = template.replace(/{image}/g, item.image);
-            template = template.replace(/{price}/g, item.price);
+    _cacheSet(key, value) {
+      if (!this.options.cache) return;
+      if (this.cache.size >= this.options.maxCacheSize) {
+        // FIFO eviction
+        const firstKey = this.cache.keys().next().value;
+        this.cache.delete(firstKey);
+      }
+      this.cache.set(key, value);
+    }
 
-            if (options.buttons) {
-                template = template.replace(/{col}/g, 's6');
-                var btn = options.buttonTpl.replace(/{id}/g, item.id);
-                template = template.replace(/{buttons}/g, btn);
-            } else {
-                template = template.replace(/{col}/g, 's12');
-                template = template.replace(/{buttons}/g, '');
-            }
-            return template;
-        },
-        onSelect: function(e, term, item) {
-            window.location.href = item.attr('data-slug');
-            return false;
-        },
-        source: function(term, response) {
-            $.ajax({
-                type: "POST",
-                url: window.location.origin+'/ws/v1/product/search',
-                dataType: "json",
-                data: {query: slugify(term),limit:this.limit},
-                success: function(data) {
-                    response(data.products);
-                },
-                error: function(result,status,xhr) {
-                  console.log(result.responseJSON);
-                }
-            });
+    // ── Rendering ────────────────────────────────────────────
+
+    _render(query, products) {
+      this.items = products;
+      this.selectedIndex = -1;
+      this._hideLoading();
+
+      if (products.length === 0) {
+        this._showEmpty(query);
+        return;
+      }
+
+      this.resultsEl.innerHTML = '';
+      this.emptyEl.style.display = 'none';
+
+      products.forEach((product, index) => {
+        const el = this.options.renderItem
+          ? this._customRender(product, query, index)
+          : this._defaultRender(product, query, index);
+        this.resultsEl.appendChild(el);
+      });
+
+      // Update footer link
+      this.footerEl.querySelector('a').href =
+        window.location.origin + '/q/' + encodeURIComponent(slugify(query.toLowerCase())).replace(/%20/g, '+');
+      this.footerEl.style.display = '';
+
+      this._open();
+    }
+
+    _defaultRender(product, query, index) {
+      const o = this.options;
+      const itemId = `${this.id}-item-${index}`;
+      const url = '/' + slugify(product.name) + '-p' + product.id;
+
+      const item = document.createElement('div');
+      item.className = 'qs-item';
+      item.setAttribute('role', 'option');
+      item.setAttribute('aria-selected', 'false');
+      item.id = itemId;
+      item.dataset.url = url;
+      item.dataset.id = product.id;
+
+      // Image
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'qs-item-image';
+      const img = document.createElement('img');
+      img.src = product.image || o.fallbackImage;
+      img.alt = product.name;
+      img.loading = 'lazy';
+      img.width = 56;
+      img.height = 56;
+      img.onerror = () => {
+        img.src = o.fallbackImage;
+        img.onerror = null;
+      };
+      imgWrap.appendChild(img);
+
+      // Content
+      const content = document.createElement('div');
+      content.className = 'qs-item-content';
+
+      const name = document.createElement('div');
+      name.className = 'qs-item-name';
+      name.innerHTML = this._highlight(product.name, query);
+
+      const desc = document.createElement('div');
+      desc.className = 'qs-item-desc';
+      desc.textContent = product.desc_small || '';
+
+      const price = document.createElement('div');
+      price.className = 'qs-item-price';
+      price.textContent = product.price || '';
+
+      content.appendChild(name);
+      content.appendChild(desc);
+      content.appendChild(price);
+
+      item.appendChild(imgWrap);
+      item.appendChild(content);
+
+      // Buy button
+      if (o.buttons) {
+        const action = document.createElement('div');
+        action.className = 'qs-item-action';
+        const btn = document.createElement('button');
+        btn.className = 'qs-buy-btn';
+        btn.type = 'button';
+        btn.textContent = 'Comprar';
+        action.appendChild(btn);
+        item.appendChild(action);
+      }
+
+      return item;
+    }
+
+    _customRender(product, query, index) {
+      const html = this.options.renderItem(product, query, this);
+      const itemId = `${this.id}-item-${index}`;
+      const url = '/' + slugify(product.name) + '-p' + product.id;
+
+      if (typeof html === 'string') {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const el = wrapper.firstChild;
+        el.id = itemId;
+        el.setAttribute('role', 'option');
+        el.setAttribute('aria-selected', 'false');
+        if (!el.dataset.url) el.dataset.url = url;
+        if (!el.dataset.id) el.dataset.id = product.id;
+        if (!el.classList.contains('qs-item')) el.classList.add('qs-item');
+        return el;
+      }
+
+      // Assume it's a DOM node
+      html.id = itemId;
+      html.setAttribute('role', 'option');
+      html.setAttribute('aria-selected', 'false');
+      return html;
+    }
+
+    _highlight(text, query) {
+      if (!query) return this._escapeHtml(text);
+      const escaped = this._escapeHtml(text);
+      const pattern = query
+        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        .split(/\s+/)
+        .filter(Boolean)
+        .join('|');
+      if (!pattern) return escaped;
+      const regex = new RegExp(`(${pattern})`, 'gi');
+      return escaped.replace(regex, '<mark>$1</mark>');
+    }
+
+    _escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ── States ───────────────────────────────────────────────
+
+    _showLoading() {
+      this.resultsEl.innerHTML = '';
+      this.emptyEl.style.display = 'none';
+      this.footerEl.style.display = 'none';
+      this.loadingEl.style.display = '';
+      this._open();
+    }
+
+    _hideLoading() {
+      this.loadingEl.style.display = 'none';
+    }
+
+    _showEmpty(query) {
+      this.resultsEl.innerHTML = '';
+      this.footerEl.style.display = 'none';
+      this.emptyEl.textContent = `${this.options.noResultsText} "${query}"`;
+      this.emptyEl.style.display = '';
+      this._open();
+    }
+
+    // ── Open / Close / Position ──────────────────────────────
+
+    _open() {
+      if (this.isOpen) return;
+      this.isOpen = true;
+      this._positionDropdown();
+      this.dropdown.style.display = '';
+      this.dropdown.classList.add('qs-dropdown--open');
+      this.input.setAttribute('aria-expanded', 'true');
+    }
+
+    _close() {
+      if (!this.isOpen) return;
+      this.isOpen = false;
+      this.dropdown.classList.remove('qs-dropdown--open');
+      this.dropdown.style.display = 'none';
+      this.input.setAttribute('aria-expanded', 'false');
+      this.input.setAttribute('aria-activedescendant', '');
+      this._clearSelection();
+    }
+
+    _positionDropdown() {
+      const rect = this.input.parentElement
+        ? this.input.parentElement.getBoundingClientRect()
+        : this.input.getBoundingClientRect();
+
+      if (this.options.fixedPosition) {
+        this.dropdown.style.position = 'fixed';
+        this.dropdown.style.top = rect.bottom + 'px';
+        this.dropdown.style.left = rect.left + 'px';
+        this.dropdown.style.width = rect.width + 'px';
+      } else {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+        this.dropdown.style.position = 'absolute';
+        this.dropdown.style.top = rect.bottom + scrollTop + 'px';
+        this.dropdown.style.left = rect.left + scrollLeft + 'px';
+        this.dropdown.style.width = rect.width + 'px';
+      }
+    }
+
+    // ── Selection ────────────────────────────────────────────
+
+    _updateSelection(itemEls) {
+      itemEls.forEach((el, i) => {
+        if (i === this.selectedIndex) {
+          el.classList.add('qs-item--selected');
+          el.setAttribute('aria-selected', 'true');
+          this.input.setAttribute('aria-activedescendant', el.id);
+          el.scrollIntoView({ block: 'nearest' });
+        } else {
+          el.classList.remove('qs-item--selected');
+          el.setAttribute('aria-selected', 'false');
+        }
+      });
+    }
+
+    _clearSelection() {
+      this.selectedIndex = -1;
+      this.resultsEl.querySelectorAll('.qs-item--selected').forEach((el) => {
+        el.classList.remove('qs-item--selected');
+        el.setAttribute('aria-selected', 'false');
+      });
+      this.input.setAttribute('aria-activedescendant', '');
+    }
+
+    _selectItem(el) {
+      const url = el.dataset.url;
+      const id = el.dataset.id;
+      const product = this.items.find((p) => String(p.id) === String(id)) || { url, id };
+      if (!product.url) product.url = url;
+      this._close();
+      this.options.onSelect(product);
+    }
+
+    // ── Cleanup ──────────────────────────────────────────────
+
+    destroy() {
+      clearTimeout(this.debounceTimer);
+      if (this.abortController) this.abortController.abort();
+
+      this.input.removeEventListener('input', this._onInput);
+      this.input.removeEventListener('keydown', this._onKeydown);
+      this.input.removeEventListener('blur', this._onBlur);
+      this.input.removeEventListener('focus', this._onFocus);
+      window.removeEventListener('resize', this._onResize);
+
+      this.dropdown.removeEventListener('click', this._onDropdownClick);
+      this.dropdown.removeEventListener('mouseover', this._onDropdownMouseover);
+      this.dropdown.removeEventListener('mouseleave', this._onDropdownMouseleave);
+      this.dropdown.removeEventListener('mousedown', this._onDropdownMousedown);
+
+      this.dropdown.remove();
+
+      // Restore original autocomplete attribute
+      if (this.originalAutocomplete !== null) {
+        this.input.setAttribute('autocomplete', this.originalAutocomplete);
+      } else {
+        this.input.removeAttribute('autocomplete');
+      }
+
+      this.input.removeAttribute('role');
+      this.input.removeAttribute('aria-autocomplete');
+      this.input.removeAttribute('aria-expanded');
+      this.input.removeAttribute('aria-controls');
+      this.input.removeAttribute('aria-activedescendant');
+
+      this.cache.clear();
+    }
+  }
+
+  // ── Utility: slugify ─────────────────────────────────────
+
+  function slugify(text) {
+    return text
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[%]+/g, 'pct')
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '')
+      .replace(/--+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+  }
+
+  window.QuickSearch = QuickSearch;
+
+  // ── jQuery Compatibility Shim ────────────────────────────
+  // Bridges the legacy $.fn.autoComplete API to QuickSearch
+  // so existing stores continue working without code changes.
+
+  if (typeof jQuery !== 'undefined') {
+    jQuery.fn.autoComplete = function (options) {
+      if (options === 'destroy') {
+        return this.each(function () {
+          if (this._quicksearch) {
+            this._quicksearch.destroy();
+            this._quicksearch = null;
+          }
+        });
+      }
+
+      return this.each(function () {
+        const opts = options || {};
+        const mapped = {};
+
+        // Map legacy options to new API
+        if (opts.menuClass === 'suggestions-fixed') {
+          mapped.fixedPosition = true;
+        } else if (opts.menuClass) {
+          mapped.menuClass = opts.menuClass;
         }
 
-    };
+        if (opts.minChars !== undefined) mapped.minChars = opts.minChars;
+        if (opts.delay !== undefined) mapped.delay = opts.delay;
+        if (opts.cache !== undefined) mapped.cache = !!opts.cache;
+        if (opts.limit !== undefined) mapped.limit = opts.limit;
+        if (opts.buttons !== undefined) mapped.buttons = opts.buttons;
+        if (opts.footerText !== undefined) mapped.footerText = opts.footerText;
 
-    function slugify(text) {
-      return text.toString().toLowerCase()
-          .replace(/[�����������]+/g, 'a')      // Special Characters #1
-          .replace(/[��������]+/g, 'e')       	// Special Characters #2
-          .replace(/[��������]+/g, 'i')       	// Special Characters #3
-          .replace(/[���������ֺ]+/g, 'o')      	// Special Characters #4
-          .replace(/[��������]+/g, 'u')       	// Special Characters #5
-          .replace(/[���?]+/g, 'y')       		// Special Characters #6
-          .replace(/[��]+/g, 'n')       			// Special Characters #7
-          .replace(/[��]+/g, 'c')       		// Special Characters #8
-          .replace(/[�]+/g, 'ss')       		// Special Characters #9
-          .replace(/[��]+/g, 'ae')       	    // Special Characters #10
-          .replace(/[��?]+/g, 'oe')       		// Special Characters #11
-          .replace(/[%]+/g, 'pct')       		// Special Characters #12
-          .replace(/\s+/g, '-')           		// Replace spaces with -
-          .replace(/[^\w\-]+/g, '')       		// Remove all non-word chars
-          .replace(/\-\-+/g, '-')         		// Replace multiple - with single -
-          .replace(/^-+/, '')             		// Trim - from start of text
-          .replace(/-+$/, '');            		// Trim - from end of text
-    }
-}(jQuery));
+        if (this._quicksearch) {
+          this._quicksearch.destroy();
+        }
+
+        this._quicksearch = new QuickSearch(this, mapped);
+      });
+    };
+  }
+})();

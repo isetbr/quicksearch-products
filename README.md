@@ -1,83 +1,138 @@
-# quicksearch-products
+# QuickSearch Products v2.0.0
 
-Compativel com jQuery 1.7.0+ in Firefox, Safari, Chrome, Opera, Internet Explorer 7+. Nenhuma dependência exceto JQuery.
+Widget de busca rápida (autocomplete) para e-commerce. Vanilla JS, sem dependências.
 
-### Usage
+## Instalação
 
-Inclua o css *auto-complete.css* no `<head>` da sua pagina - e o JavaScript *auto-complete.min.js* depois de carregar o jQuery. autoComplete aceita configurações de um objeto de key/value, e pode ser aplicado em qualquer text input
+Inclua `quicksearch.css` no `<head>` e `quicksearch.js` (ou as versões `.min`) antes de fechar o `</body>`:
 
-```$(selector).autoComplete(options);```
-
-### Settings
-
-Propriedade | Padrão | Descrição
------------- | ------------- | -------------
-minChars | 3 | Quantidade de caracteres para realizar a pesquisa
-delay | 150 | Valor em milisegundos correspondente a espera entre o apertar da tecla e a pesquisa na API
-cache | true | Determina se as pesquisas executadas devem ser armazenadas em cache.
-limit | 10 | Número máximo de itens a serem retornados conforme pesquisa.
-menuClass | '' | Classe customizada adicionada ao menu dropdown
-buttons | false | Ativa/Desativa botão comprar da listagem de produtos
-template | `html` | html da estrutura de exibição dos itens dropdown
-buttonTpl | `html` | html da estrutura do botão comprar a propriedade `buttons` deve estar setada como true para exibição do botão
-footerText | `string` | Texto exibido no rodapé da listagem com link para página de busca da loja, texto padrão: "Ver mais"
-
-template padrão:
-
-```
-<div class="autocomplete-suggestion" data-val="{name}" data-slug="{url}">
-    <div class="autocomplete-suggestion-img">
-        <img src="{image}">
-    </div>
-    <div class="autocomplete-suggestion-body">
-        <div class="autocomplete-col-{col}">
-            <div class="autocomplete-title">{name}</div>
-            <div class="autocomplete-desc">{desc}</div>
-            <div class="autocomplete-price">{price}</div>
-        </div>
-        {buttons}
-    </div>
-</div>
+```html
+<link rel="stylesheet" href="quicksearch.css">
+<script src="quicksearch.js"></script>
 ```
 
-Tags de substituição do template:
+## Uso
 
-- `{name}` Nome do produto.
-- `{url}` Url do produto.
-- `{image}` Imagem do produto.
-- `{desc}` Breve descrição do produto.
-- `{price}` Preço do produto.
-- `{col}` Colunas do template, se a opção `buttons` estiver ativa o template é dividido em duas colunas, uma para o conteúdo do produto e outra para o template do botão.
-- `{buttons}` Esta tag é substituida pelo template do botão comprar.
-
-Template do botão padrão:
-
-```
-<div class="autocomplete-col-s6">
-	<div class="autocomplete-buttons">
-		<a id="bt_comprar" style="display:block;" href="javascript:void(0);" rel="{id}" onclick="buyNow(this.rel);" title="Comprar">Comprar</a>
-	</div>
-</div>
-```
-
-Tags de substituição do botão:
-
-- `{id}` ID do produto.
-
-
-Notas:
-
-- No caso da barra de pesquisa ser fixa/flutuante na página, utilizar na opção `menuClass` o valor `suggestions-fixed`
-
-### Exemplo
-
-```
+```html
 <input id="keywords" type="text" name="q" placeholder="Pesquisa">
 ```
 
-```
-$("#keywords").autoComplete({
-    menuClass: "suggestions-fixed",
-    buttons: true
+```js
+new QuickSearch('#keywords', {
+  fixedPosition: true,
+  buttons: true
 });
 ```
+
+## Opções
+
+| Propriedade | Padrão | Descrição |
+|---|---|---|
+| `minChars` | `3` | Caracteres mínimos para iniciar a busca |
+| `delay` | `300` | Debounce em milissegundos |
+| `cache` | `true` | Cache de resultados em memória |
+| `maxCacheSize` | `50` | Máximo de queries cacheadas (FIFO) |
+| `limit` | `10` | Máximo de itens retornados pela API |
+| `buttons` | `false` | Exibe botão "Comprar" em cada item |
+| `menuClass` | `''` | Classe CSS adicional no dropdown |
+| `fixedPosition` | `false` | Usa `position: fixed` no dropdown (para barras fixas) |
+| `footerText` | `'Ver mais resultados'` | Texto do link no rodapé |
+| `noResultsText` | `'Nenhum produto encontrado para'` | Texto do estado vazio |
+| `loadingText` | `'Buscando...'` | Texto do estado de carregamento |
+| `apiUrl` | `'/ws/v1/product/search'` | URL do endpoint de busca |
+| `fallbackImage` | `data:image/png;base64,...` | Imagem placeholder para erros |
+| `onSelect` | `(product) => { location.href = product.url }` | Callback ao selecionar item |
+| `onBuy` | `(id) => { window.buyNow(id) }` | Callback do botão comprar |
+| `renderItem` | `null` | Função customizada de renderização |
+
+## Customização CSS
+
+Todas as cores e tamanhos são controlados via CSS custom properties:
+
+```css
+:root {
+  --qs-bg: #fff;
+  --qs-border: #e0e0e0;
+  --qs-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --qs-radius: 8px;
+  --qs-item-hover-bg: #f5f5f5;
+  --qs-item-selected-bg: #eef2ff;
+  --qs-title-color: #1a1a1a;
+  --qs-desc-color: #666;
+  --qs-price-color: #e53935;
+  --qs-price-size: 1.125rem;
+  --qs-highlight-bg: #fff3cd;
+  --qs-img-size: 56px;
+  --qs-btn-bg: #1a73e8;
+  --qs-btn-color: #fff;
+}
+```
+
+## Render customizado
+
+```js
+new QuickSearch('#keywords', {
+  renderItem(product, query, instance) {
+    return `<div class="qs-item" data-url="${product.url}" data-id="${product.id}">
+      <strong>${product.name}</strong> - ${product.price}
+    </div>`;
+  }
+});
+```
+
+## API
+
+```js
+const qs = new QuickSearch('#keywords');
+
+// Destruir instância (limpa eventos e DOM)
+qs.destroy();
+```
+
+## Acessibilidade
+
+O widget implementa o padrão ARIA combobox:
+- `role="combobox"` no input com `aria-autocomplete`, `aria-expanded`, `aria-controls`
+- `role="listbox"` no dropdown, `role="option"` nos itens
+- Navegação por teclado: Arrow Up/Down, Enter, Escape, Tab
+- `aria-live="polite"` nos estados de loading e vazio
+
+## Navegação por teclado
+
+| Tecla | Ação |
+|---|---|
+| Arrow Down / Up | Navegar entre itens |
+| Enter | Selecionar item ativo |
+| Escape | Fechar dropdown |
+| Tab | Fechar dropdown e seguir fluxo |
+
+## Build
+
+```bash
+npm install
+npm run build
+```
+
+Gera `quicksearch.min.js` e `quicksearch.min.css`.
+
+## Migração v1 (jQuery) → v2 (Vanilla)
+
+```js
+// Antes
+$("#keywords").autoComplete({ menuClass: "suggestions-fixed", buttons: true });
+
+// Depois
+new QuickSearch('#keywords', { fixedPosition: true, buttons: true });
+```
+
+Principais mudanças:
+- Sem dependência de jQuery
+- `menuClass: "suggestions-fixed"` → `fixedPosition: true`
+- Debounce padrão: 150ms → 300ms
+- Fetch + AbortController (cancela requests pendentes)
+- Cache com limite e evição FIFO
+- Acessibilidade ARIA completa
+- CSS moderno com variáveis e flexbox
+- Responsivo com touch targets adequados
+
+Os arquivos antigos (`auto-complete.*`) permanecem no repositório para referência.

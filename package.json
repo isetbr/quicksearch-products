@@ -1,0 +1,14 @@
+{
+  "name": "auto-complete-products",
+  "version": "2.0.0",
+  "description": "Vanilla JS autocomplete widget for e-commerce product search",
+  "scripts": {
+    "minify:js": "terser auto-complete.js -o auto-complete.min.js -c -m",
+    "minify:css": "csso auto-complete.css -o auto-complete.min.css",
+    "build": "npm run minify:js && npm run minify:css"
+  },
+  "devDependencies": {
+    "terser": "^5.x",
+    "csso-cli": "^4.x"
+  }
+}
